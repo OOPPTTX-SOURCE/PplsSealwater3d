@@ -214,7 +214,7 @@ PODS.forEach(function(p,i){var px=X(p[6]),pz=Z(p[7]);var held=p[5]==='보류',li
  var tx=potx-0.12,tz=potz; var cor=cb.axisX?new THREE.Vector3(cb.x,yb,tz):new THREE.Vector3(tx,yb,cb.z);
  poly([new THREE.Vector3(cb.x,H_BLU,cb.z),new THREE.Vector3(cb.x,yb,cb.z),cor,new THREE.Vector3(tx,yb,tz),new THREE.Vector3(tx,1.85,tz)],0.022,0x0f8f7f,G.cwb,1.6);
  // CW 리턴: Pot → 위 → 수평 → 빨강
- var cr=nearest(rRed,new THREE.Vector3(potx,0,potz)); var yr=2.05+0.05*(i%4); var rx=potx+0.12;
+ var cr=nearest(rRed,new THREE.Vector3(potx,0,potz)); var yr=H_RED+0.3+0.05*(i%4); var rx=potx+0.12;
  var cor2=cr.axisX?new THREE.Vector3(rx,yr,cr.z):new THREE.Vector3(cr.x,yr,potz);
  poly([new THREE.Vector3(rx,1.85,potz),new THREE.Vector3(rx,yr,potz),cor2,new THREE.Vector3(cr.x,yr,cr.z),new THREE.Vector3(cr.x,H_RED,cr.z)],0.022,0xc0392b,G.cwb,1.6);
  var s=lab(p[0],held?'#8a4300':(lioh?'#6b2fa6':'#0c6a58'),0.7);s.position.set(potx,2.2,potz);G.labels.add(s);});
