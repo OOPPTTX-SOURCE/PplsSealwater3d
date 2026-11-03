@@ -32,7 +32,7 @@ label.chip input{display:none}
 <canvas id="c"></canvas>
 <div class="bar" id="bar"></div>
 <div id="hint">드래그 회전 · 두 손가락 확대/이동 · 개소 탭하면 정보</div>
-<div id="info"><b>Sealing Water 3D 계통도 (개략 · 손그림 평면 반영)</b><br><span class="k"><span style="color:#111">■</span> 검정 = 헤더직결(RO DI) · <span style="color:#1f3fbf">■</span> 파랑 = 펌프 토출 · <span style="color:#c0392b">■</span> 빨강 = Seal Pot CW 리턴. 위치는 Plot plan 사진 + 손그림 기준 개략이며 높이는 ISO 기준(약 +2.7~3.7 m)입니다. 용어: 직수모드 = API PLAN 54, SEAL POT모드 = API PLAN 53-A. 밸브스테이션 버튼(RO 직공급/스키드 공급)은 물 공급원 구분입니다.</span></div>
+<div id="info"><b>Sealing Water 3D 계통도 (개략 · 손그림 평면 반영)</b><br><span class="k"><span style="color:#111">■</span> 검정 = 헤더직결(RO DI) · <span style="color:#1f3fbf">■</span> 파랑 = 펌프 토출 · <span style="color:#c0392b">■</span> 빨강 = Seal Pot CW 리턴. 위치는 Plot plan 사진 + 손그림 기준 개략이며 높이는 ISO 기준(약 +2.7~3.7 m)입니다. 용어: 직수모드 = API PLAN 54, SEAL POT모드 = API PLAN 53-A. 밸브스테이션 버튼(RO 직공급/스키드 공급)은 물 공급원 구분입니다. 펌프마다 V3(검정 직수 공급 밸브)는 스키드 공급 중 전부 닫습니다 (◆ 초록=열림, 빨강=닫힘).</span></div>
 <script>/**
  * @license
  * Copyright 2010-2021 Three.js Authors
@@ -146,11 +146,13 @@ regLabel('② → 1층 검정 탱크보충 라인','#111',0.55,L(-1.0,-0.05,0),-
 regLabel('Dryer쪽 → (방향 확인)','#333',0.55,L(-6.5,3.3,0),0,0.55,true);
 regLabel('J: 파랑(스키드 토출) 합류','#1f3fbf',0.55,new THREE.Vector3(STN.jx,STN.jy,STN.jz),0,0.7,true);
 regLabel('↑ 3~4층 공정으로 (이 시스템 아님)','#555',0.55,L(0,4.35,0),1,0.1,true);
+function setV3(){V3L.forEach(function(e){var closed=(typeof MODE!=='undefined'&&MODE==='skid')||(e.applied&&POTMODE==='pot');e.g.children.forEach(function(c){c.material.color.set(closed?0xd64545:0x2e9e5b)})})}
+function isV3Closed(p){return MODE==='skid'||(p[5]!=='보류'&&POTMODE==='pot')}
 var MODE='direct';
 function stState(m){return {1:true,2:m==='skid',3:m!=='skid',4:true,5:false}}
 function setMode(m,quiet){MODE=m;var st=stState(m);for(var k=1;k<=5;k++){var open=st[k];stVal[k].children.forEach(function(c){c.material.color.set(open?0x2e9e5b:0xd64545)});
  var d=VDEF[k];var e=stLab[k];if(e){G.st.remove(e.sp);e.sp.material.map.dispose();e.sp.material.dispose();var sp=lab(d.n+' · '+(open?'열림':'닫힘'),open?'#176b3a':'#a02020',0.6);G.st.add(sp);e.sp=sp}else{e=regLabel(d.n+' · '+(open?'열림':'닫힘'),open?'#176b3a':'#a02020',0.6,d.p,d.sx,d.dy,true);stLab[k]=e}}
- updLabels();
+ updLabels();setV3();
  var el=document.getElementById('info');if(el&&!quiet)el.innerHTML='<b>밸브스테이션 — '+(m==='skid'?'스키드 공급 (스키드 가동)':'RO 직공급 (현재, 스키드 정지)')+'</b><br>① 열림 · ② '+(st[2]?'열림':'닫힘')+' · ③ '+(st[3]?'열림':'닫힘')+' · ④ 열림 · ⑤ 닫힘(스페어)<br><span class="k">손그림 순서(아래→위): ① RO 입구 → ⑤ 스페어 분기 → ② 탱크 보충 분기 → ④ 중간 → 노드 N. N에서 직진하는 배관은 3~4층 공정으로 가는 라인(이 시스템 아님). ② 라인은 1층으로 내려가 검정 탱크보충 라인에 연결되고, 좌측 분기 ③은 Dryer쪽 라인과 스키드 토출(파랑) 합류점 J로 가는 밸브입니다. 스키드 공급에서는 ③을 닫고 ②를 열어 RO와 스키드 토출을 분리합니다. 초록=열림, 빨강=닫힘.</span>'}
 // ---- 스키드 ----
 var tank=cyl(0.95,2.0,0x6fa3d8,0.92);tank.position.set(SK.tx,1.0,SK.tz);G.skid.add(tank);
@@ -183,7 +185,9 @@ put('CW 리턴 ← 탱크 상부','#c0392b',new THREE.Vector3(SK.tx-1.2,H_RED-0.
 function nearest(pts,p){var best=null;for(var i=0;i<pts.length-1;i++){var a=pts[i],b=pts[i+1];var dx=b.x-a.x,dz=b.z-a.z;var L2=dx*dx+dz*dz;if(L2<1e-6)continue;var t=((p.x-a.x)*dx+(p.z-a.z)*dz)/L2;var cl=Math.max(0,Math.min(1,t));var qx=a.x+cl*dx,qz=a.z+cl*dz;var d=Math.hypot(p.x-qx,p.z-qz);var pen=(t<0||t>1)?3:0;var sc=d+pen;if(!best||sc<best.sc){best={sc:sc,x:qx,z:qz,d:d,y:a.y,axisX:Math.abs(dx)>Math.abs(dz),clamped:(t<0||t>1)}}}return best}
 // ---- 펌프 · Pot · 분기 ----
 var potMeshes=[];
+var V3L=[],POTMODE='direct';
 function pumpAt(px,pz,hold,lioh,idx,keep){
+ var applied=!hold&&!keep;
  var pump=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.7,0.6),mat(keep?0xc9b458:0x8a949e));pump.position.set(px,0.4,pz);G.pots.add(pump);
  var topY=0.95;
  // Plan 54 씰워터 분기: 헤더(검정/파랑)에서 위로 → 90° 엘보 → 수평 → 90° 엘보 → 펌프
@@ -196,6 +200,7 @@ function pumpAt(px,pz,hold,lioh,idx,keep){
   else{pts.push(new THREE.Vector3(tx,top,q.z)); if(Math.abs(q.z-tz)>0.01)pts.push(new THREE.Vector3(tx,top,tz));}
   pts.push(new THREE.Vector3(tx,topY,tz));
   poly(pts,0.035,cfg[2],G.p54,1.5);
+  if(cfg[2]===0x111111){var vg=valve(new THREE.Vector3(tx,1.75,tz),0x888888,G.p54,'y',0.45);V3L.push({g:vg,applied:applied});}
   var j=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.1,0.14),mat(cfg[2]));j.position.set(tx,topY,tz);G.p54.add(j);
  });
  return pump;
@@ -238,12 +243,13 @@ function pan(dx,dy){var k=sph.r*0.0016;var right=new THREE.Vector3().setFromMatr
 var ray=new THREE.Raycaster();
 function pick(x,y){var m=new THREE.Vector2(x/innerWidth*2-1,-(y/innerHeight)*2+1);ray.setFromCamera(m,camera);var h=ray.intersectObjects(potMeshes,false);if(h.length){show(h[0].object.userData.i)}}
 function show(i){var p=PODS[i];var cls=p[5]==='보류'?'t-h':(p[2]!=='물'?'t-l':'t-a');var kind=p[5]==='보류'?'보류 (MVR 응축수, Pot 설치만 · V1·V2·V8·V9 닫힘)':(p[2]!=='물'?'적용 · LiOH(NaOH) 서비스 — 매 순찰 우선 확인':'SEAL POT모드 적용 (API PLAN 53-A)');
- document.getElementById('info').innerHTML='<b>'+p[0]+'</b><span class="tag '+cls+'">'+p[5]+'</span><br>'+p[1]+'<br><span class="k">Pot 최소압</span> '+p[3].toFixed(1)+' bar · <span class="k">목표(제안)</span> '+(p[3]+0.5).toFixed(1)+' · <span class="k">상한(제안)</span> '+(p[3]+1.5).toFixed(1)+' bar<br><span class="k">Base 유량</span> '+p[4]+' m³/h<br><span class="k">'+kind+'</span><br><span class="k">직수모드(API PLAN 54) 씰워터 분기: 검정·파랑 헤더 → 위로 → 수평 → 아래로 펌프(V3) · CW(냉각수): 파랑에서 코일 입구(V8), 코일 출구(V9) → 빨강 리턴 · 씰 유체: Pot ↔ 씰 챔버 닫힌 루프(V1·V2, 3D 미표시)</span>'}
+ document.getElementById('info').innerHTML='<b>'+p[0]+'</b><span class="tag '+cls+'">'+p[5]+'</span><br>'+p[1]+'<br><span class="k">Pot 최소압</span> '+p[3].toFixed(1)+' bar · <span class="k">목표(제안)</span> '+(p[3]+0.5).toFixed(1)+' · <span class="k">상한(제안)</span> '+(p[3]+1.5).toFixed(1)+' bar<br><span class="k">Base 유량</span> '+p[4]+' m³/h<br><span class="k">'+kind+'</span><br><span class="k">V3(검정 직수 공급 밸브)</span> '+(isV3Closed(p)?'닫힘':'열림')+'<br><span class="k">직수모드(API PLAN 54) 씰워터 분기: 검정·파랑 헤더 → 위로 → 수평 → 아래로 펌프(V3) · CW(냉각수): 파랑에서 코일 입구(V8), 코일 출구(V9) → 빨강 리턴 · 씰 유체: Pot ↔ 씰 챔버 닫힌 루프(V1·V2, 3D 미표시)</span>'}
 var bar=document.getElementById('bar');
 function btn(t,f){var b=document.createElement('button');b.textContent=t;b.onclick=f;bar.appendChild(b)}
-btn('등각',function(){view('iso')});btn('평면',function(){view('top')});btn('스키드',function(){view('skid')});btn('서측',function(){view('west')});btn('동측',function(){view('east')});btn('밸브스테이션',function(){view('st')});btn('RO 직공급',function(){setMode('direct')});btn('스키드 공급',function(){setMode('skid')});
+btn('등각',function(){view('iso')});btn('평면',function(){view('top')});btn('스키드',function(){view('skid')});btn('서측',function(){view('west')});btn('동측',function(){view('east')});btn('밸브스테이션',function(){view('st')});btn('RO 직공급',function(){setMode('direct')});btn('스키드 공급',function(){setMode('skid')});btn('개소: 직수모드',function(){POTMODE='direct';setV3();ruleInfo()});btn('개소: SEAL POT모드',function(){POTMODE='pot';setV3();ruleInfo()});
 [['2층','f2',null],['밸브스테이션','st',null],['설비','vessel',null],['검정 헤더직결','black','#111'],['파랑 펌프토출','blue','#1f3fbf'],['빨강 CW리턴','red','#c0392b'],['직수모드 씰워터 분기','p54','#7f6a00'],['CW 코일 분기','cwb','#0f8f7f'],['라벨','labels',null]].forEach(function(x){var l=document.createElement('label');l.className='chip on';l.innerHTML='<input type="checkbox" checked>'+(x[2]?'<span class="dot" style="background:'+x[2]+'"></span>':'')+x[0];l.onclick=function(e){e.preventDefault();var on=!G[x[1]].visible;G[x[1]].visible=on;l.classList.toggle('on',on)};bar.appendChild(l)});
 setMode('direct',true);
+function ruleInfo(){var el=document.getElementById('info');el.innerHTML='<b>펌프마다 V3 (검정 직수 공급 밸브) — 현재 표시</b><br>공급원: <b>'+(MODE==='skid'?'스키드 공급 → 모든 펌프 V3 닫힘':'RO 직공급')+'</b> · 적용 13개소: <b>'+(POTMODE==='pot'?'SEAL POT모드 → V3·V4 닫힘, V1·V2 열림':'직수모드 → V3·V4 열림, V1·V2 닫힘')+'</b><br><span class="k">규칙: 스키드 공급 중에는 모든 펌프의 V3를 하나씩 닫고, RO 직공급 직수모드일 때만 엽니다. ◆ 초록=열림, 빨강=닫힘. 배관 위 작은 밸브가 V3입니다.</span>'}
 function loop(){requestAnimationFrame(loop);renderer.render(scene,camera)}
 loop();
 })();
